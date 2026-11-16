@@ -2,7 +2,7 @@
 
 原生 iPhone 相机源码，最低 iOS 17.0，首版拍摄界面固定竖屏。使用 SwiftUI、AVFoundation、Vision、Core Motion、Core Image 和 PhotoKit；无需服务端、API Key、账号或购买授权，不设置拍摄/构图次数上限。画面分析和照片处理都在设备本地进行，只申请相机及相册「仅添加」权限。
 
-这是源码交付；当前尚未完成 macOS/Xcode 构建、模拟器运行或 iPhone 真机验收，不能当作已验证的可安装成品。用户反馈手机运行 iOS 26，具体机型尚未知；兼容性仍需在该设备实测。
+这是源码交付。[首次真实 macOS CI](https://github.com/riky2026/-./actions/runs/43866474402) 已通过 Core SwiftPM 27/27 测试和结构检查，但模拟器目标因闪光灯模式类型比较错误编译失败；源码已修正，等待重跑。设备构建与打包未执行，模拟器运行和 iPhone 真机验收尚未完成，不能当作已验证的可安装成品。用户反馈手机运行 iOS 26，具体机型尚未知；兼容性仍需在该设备实测。
 
 ## 获取源码
 
@@ -52,4 +52,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 ## 验证范围
 
-已取得 Windows 结构静态检查及 Core 在 Swift 6.1/Linux 公共 Compiler Explorer 环境的 27/27 测试证据；后者不是 SwiftPM 或 Apple SDK 测试。macOS/Xcode/actool、模拟器运行及 iPhone 真机均未执行。详见解压后的 `docs/validation.md`；真实设备验收请逐项执行 `docs/device-checklist.md` 并记录结果。
+已取得 Windows 结构静态检查、此前 Swift 6.1/Linux 公共 Compiler Explorer 的 Core 27/27 证据，以及真实 macOS 15.8.2 arm64、Xcode 16.4、Apple Swift 6.1.2 下的 SwiftPM 27/27 和结构检查通过记录。首次模拟器目标编译失败，当前类型修复仍待真实 CI 确认；设备构建、打包、模拟器运行及 iPhone 真机均未执行。详见解压后的 `docs/validation.md`；真实设备验收请逐项执行 `docs/device-checklist.md` 并记录结果。
