@@ -1,0 +1,133 @@
+name: iOS native build (UNSIGNED)
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Resolve reviewed source tree or source bundle
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/build/ci-logs"
+          python3 - 2>&1 <<'PY' | tee "$GITHUB_WORKSPACE/build/ci-logs/source.log"
+          import hashlib, os, pathlib, stat, tempfile, zipfile
+          workspace = pathlib.Path(os.environ['GITHUB_WORKSPACE']).resolve()
+          if (workspace / 'FrameGuide.xcodeproj/project.pbxproj').is_file():
+              root = workspace
+              print('Source mode: full checkout; commit:', os.environ['GITHUB_SHA'])
+          else:
+              bundle = workspace / 'FrameGuide-Source.zip'
+              print('Source mode: bundle; checkout:', os.environ['GITHUB_SHA'])
+              print('FrameGuide-Source.zip SHA-256:', hashlib.sha256(bundle.read_bytes()).hexdigest())
+              root = pathlib.Path(tempfile.mkdtemp(prefix='frameguide-source-', dir=os.environ['RUNNER_TEMP'])).resolve()
+              roots = {'Core', 'FrameGuide', 'FrameGuide.xcodeproj', 'docs', 'scripts', '.github', 'README.md', '.gitignore'}
+              denied = {'.git', '.superpowers', 'build', 'deriveddata', '.build', '.swiftpm', '__pycache__', 'xcuserdata', 'node_modules', '.cache', '.pytest_cache'}
+              extensions = {'.ipa', '.dylib', '.p12', '.pfx', '.cer', '.pem', '.key', '.mobileprovision', '.provisionprofile', '.pyc', '.xcuserstate', '.xcscmblueprint', '.xccheckout', '.zip'}
+              with zipfile.ZipFile(bundle) as archive:
+                  members = archive.infolist()
+                  if len(members) > 10000 or sum(m.file_size for m in members) > 100_000_000:
+                      raise ValueError('Source bundle exceeds source-only limits')
+                  seen = set()
+                  for m in members:
+                      p = pathlib.PurePosixPath(m.filename)
+                      if (not m.filename or m.orig_filename != m.filename
+                          or chr(92) in m.filename or ':' in m.filename or p.is_absolute()
+                          or any(part in {'..', '.'} for part in m.filename.rstrip('/').split('/'))
+                          or p.parts[0] not in roots or any(part.casefold() in denied or part == '.DS_Store'
+                              or part == '.env' or part.startswith('.env.') for part in p.parts)
+                          or p.suffix.lower() in extensions or stat.S_ISLNK(m.external_attr >> 16)):
+                          raise ValueError(f'Unsafe source member: {m.filename}')
+                      key = m.filename.rstrip('/').casefold()
+                      if key in seen:
+                          raise ValueError(f'Duplicate source member: {m.filename}')
+                      seen.add(key)
+                      target = root.joinpath(*p.parts)
+                      if not target.resolve().is_relative_to(root):
+                          raise ValueError('Source member escapes temporary root')
+                  archive.extractall(root)
+          required = ['Core/Package.swift', 'Core/Sources/FrameGuideCore/CompositionEngine.swift',
+                      'Core/Tests/FrameGuideCoreTests/CompositionEngineTests.swift',
+                      'FrameGuide/App/FrameGuideApp.swift', 'FrameGuide/Resources/Info.plist',
+                      'FrameGuide.xcodeproj/project.pbxproj',
+                      'FrameGuide.xcodeproj/xcshareddata/xcschemes/FrameGuide.xcscheme',
+                      'scripts/validate_project.py', 'scripts/package_source.ps1',
+                      'README.md', 'docs/validation.md', 'docs/device-checklist.md', '.github/workflows/ios.yml']
+          for relative in required:
+              if not (root / relative).is_file():
+                  raise ValueError(f'Missing source file: {relative}')
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write(f'PROJECT_ROOT={root}\n')
+          print('Project root:', root)
+          PY
+
+      - name: Select Xcode and record toolchain
+        run: |
+          set -euo pipefail
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+          xcodebuild -version 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/xcode-version.log"
+          swift --version 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/swift-version.log"
+
+      - name: Run Core SwiftPM tests
+        working-directory: ${{ env.PROJECT_ROOT }}
+        run: |
+          set -euo pipefail
+          swift test --package-path Core 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/core-tests.log"
+
+      - name: Validate project structure
+        working-directory: ${{ env.PROJECT_ROOT }}
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_project.py 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/project-validation.log"
+
+      - name: Build simulator target (no simulator launch)
+        working-directory: ${{ env.PROJECT_ROOT }}
+        run: |
+          set -euo pipefail
+          xcodebuild -project FrameGuide.xcodeproj -scheme FrameGuide -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/simulator CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/simulator-build.log"
+
+      - name: Build device target without signing
+        working-directory: ${{ env.PROJECT_ROOT }}
+        run: |
+          set -euo pipefail
+          xcodebuild -project FrameGuide.xcodeproj -scheme FrameGuide -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/device CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/device-build.log"
+
+      - name: Package UNSIGNED device app
+        working-directory: ${{ env.PROJECT_ROOT }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/package/Payload
+          cp -R build/device/Build/Products/Release-iphoneos/FrameGuide.app build/package/Payload/
+          cd build/package
+          zip -qr ../FrameGuide-UNSIGNED.ipa Payload
+          echo '### FrameGuide-UNSIGNED.ipa — 未签名设备产物' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Requires your own valid signing before installation. This build does not verify simulator launch, iPhone installation or camera behavior.' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload UNSIGNED device artifact (requires own signing)
+        uses: actions/upload-artifact@v7
+        with:
+          name: FrameGuide-UNSIGNED-device-requires-signing
+          path: ${{ env.PROJECT_ROOT }}/build/FrameGuide-UNSIGNED.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Preserve build logs including failures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: FrameGuide-native-build-logs
+          path: ${{ github.workspace }}/build/ci-logs
+          if-no-files-found: warn
+          retention-days: 14
