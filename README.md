@@ -2,7 +2,7 @@
 
 原生 iPhone 相机源码，最低 iOS 17.0，首版拍摄界面固定竖屏。使用 SwiftUI、AVFoundation、Vision、Core Motion、Core Image 和 PhotoKit；无需服务端、API Key、账号或购买授权，不设置拍摄/构图次数上限。画面分析和照片处理都在设备本地进行，只申请相机及相册「仅添加」权限。
 
-本版已修复相机方向、取景范围、风景引导和权限流程，修复后首轮 CI 的 Apple Core 测试 30/30 通过，原生 JPEG 样图测试在方向元数据断言处中止；像素检查及后续 iOS 构建待重跑。以下为修复前的验证记录：[第二次真实 macOS CI](https://github.com/riky2026/-./actions/runs/43868115917) 已通过 Core SwiftPM 27/27 测试、结构检查、模拟器目标编译、设备 Release 编译、未签名 IPA 打包与 artifact 上传。模拟器尚未启动，个人签名、安装和 iPhone 真机验收均未执行。用户反馈手机运行 iOS 26，具体机型尚未知；兼容性仍需在该设备实测。
+相机方向、取景范围、风景引导及权限流程修复已通过[最新 macOS CI](https://github.com/riky2026/-./actions/runs/43885558553)：Apple SwiftPM 30/30，原生 JPEG 像素测试和工程结构检查通过，模拟器 Debug、设备 Release 均编译成功。已生成未签名 IPA；模拟器交互、签名安装及 iOS 26 真机相机行为尚未验证。
 
 ## 获取源码
 
@@ -42,7 +42,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 成功后下载 `FrameGuide-UNSIGNED-device-requires-signing` artifact，内有 **FrameGuide-UNSIGNED.ipa（未签名）**；另有 `FrameGuide-native-build-logs`。artifact 的外层 ZIP 只是下载容器。生成 IPA 不能证明已安装、真机相机可用或兼容 iOS 26。
 
-修复前 CI2 产物：[未签名 IPA artifact](https://github.com/riky2026/-./actions/runs/43868115917/artifacts/14226059197)、[构建日志](https://github.com/riky2026/-./actions/runs/43868115917/artifacts/14226204031)。已下载检查 IPA 的 arm64 Mach-O、最低 iOS 17.0、权限与资源配置，确认没有签名或描述文件；该检查只验证归档和配置。CI 仍有启动背景颜色平台声明及未依赖 AppIntents 时跳过元数据提取两类警告，详见 ZIP 内 `docs/validation.md`。
+最新产物：[未签名 IPA 下载](https://github.com/riky2026/-./actions/runs/43885558553/artifacts/14234047218) · [构建日志](https://github.com/riky2026/-./actions/runs/43885558553/artifacts/14234461741)。解出的 IPA 为 305844 字节，SHA-256 为 `e890037fff6b727d97252b53064cc1b67c357b0bc7872f40ae726b1b4cfec2f6`。已核对 arm64、iOS 17.0、权限、资源和未签名状态。
 
 ## 签名与安装
 
@@ -54,4 +54,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 ## 验证范围
 
-已取得 Windows 结构静态检查、此前 Swift 6.1/Linux 公共 Compiler Explorer 的 Core 27/27 证据，以及真实 macOS 15.8.2 arm64、Xcode 16.4、Apple Swift 6.1.2 下的 SwiftPM 27/27、结构检查和模拟器/设备目标构建成功记录。[首次 CI](https://github.com/riky2026/-./actions/runs/43866474402) 曾因闪光灯模式类型比较错误编译失败，修复已由第二次 CI 验证。未签名 IPA 已生成并完成归档/配置检查；模拟器启动、签名安装及 iOS 26 真机运行均未执行。详见解压后的 `docs/validation.md`；真实设备验收请逐项执行 `docs/device-checklist.md` 并记录结果。
+CI 实测源码 ZIP SHA-256 为 `3669eb6322fc84c8f675e2b60d54eb52e3c54c0a031ae32f76a86f96a54fe34b`。该 CI 对应此前版本。当前源码另已修正「实际 JPEG 尺寸小于请求上限」的取景裁剪，新增原生样图回归；此补丁的 Apple 构建及样图执行待验证。历史构建、剩余警告及验收边界见 `docs/validation.md`；实际操作请按 `docs/device-checklist.md` 逐项记录。
