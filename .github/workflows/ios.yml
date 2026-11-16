@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-15-intel
     defaults:
       run:
         shell: bash
@@ -85,6 +85,13 @@ jobs:
         run: |
           set -euo pipefail
           swift test --package-path Core 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/core-tests.log"
+
+      - name: Exercise native JPEG rendering and framing
+        working-directory: ${{ env.PROJECT_ROOT }}
+        run: |
+          set -euo pipefail
+          swiftc FrameGuide/Photo/PhotoFilter.swift FrameGuide/Photo/PhotoProcessor.swift scripts/PhotoFixture.swift -o "$RUNNER_TEMP/photo-fixture"
+          "$RUNNER_TEMP/photo-fixture" 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/photo-fixture.log"
 
       - name: Validate project structure
         working-directory: ${{ env.PROJECT_ROOT }}
