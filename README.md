@@ -2,7 +2,7 @@
 
 原生 iPhone 相机源码，最低 iOS 17.0，首版拍摄界面固定竖屏。使用 SwiftUI、AVFoundation、Vision、Core Motion、Core Image 和 PhotoKit；无需服务端、API Key、账号或购买授权，不设置拍摄/构图次数上限。画面分析和照片处理都在设备本地进行，只申请相机及相册「仅添加」权限。
 
-本版已修复相机方向、取景范围、风景引导和权限流程，修复后的 Apple 构建与原生 JPEG 样图测试待新 CI 确认。以下为修复前的验证记录：[第二次真实 macOS CI](https://github.com/riky2026/-./actions/runs/43868115917) 已通过 Core SwiftPM 27/27 测试、结构检查、模拟器目标编译、设备 Release 编译、未签名 IPA 打包与 artifact 上传。模拟器尚未启动，个人签名、安装和 iPhone 真机验收均未执行。用户反馈手机运行 iOS 26，具体机型尚未知；兼容性仍需在该设备实测。
+本版已修复相机方向、取景范围、风景引导和权限流程，修复后首轮 CI 的 Apple Core 测试 30/30 通过，原生 JPEG 样图测试在方向元数据断言处中止；像素检查及后续 iOS 构建待重跑。以下为修复前的验证记录：[第二次真实 macOS CI](https://github.com/riky2026/-./actions/runs/43868115917) 已通过 Core SwiftPM 27/27 测试、结构检查、模拟器目标编译、设备 Release 编译、未签名 IPA 打包与 artifact 上传。模拟器尚未启动，个人签名、安装和 iPhone 真机验收均未执行。用户反馈手机运行 iOS 26，具体机型尚未知；兼容性仍需在该设备实测。
 
 ## 获取源码
 
