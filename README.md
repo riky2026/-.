@@ -2,7 +2,7 @@
 
 原生 iPhone 相机源码，最低 iOS 17.0，首版拍摄界面固定竖屏。使用 SwiftUI、AVFoundation、Vision、Core Motion、Core Image 和 PhotoKit；无需服务端、API Key、账号或购买授权，不设置拍摄/构图次数上限。画面分析和照片处理都在设备本地进行，只申请相机及相册「仅添加」权限。
 
-相机方向、取景范围、风景引导及权限流程修复已通过[最新 macOS CI](https://github.com/riky2026/-./actions/runs/43885558553)：Apple SwiftPM 30/30，原生 JPEG 像素测试和工程结构检查通过，模拟器 Debug、设备 Release 均编译成功。已生成未签名 IPA；模拟器交互、签名安装及 iOS 26 真机相机行为尚未验证。
+相机方向、取景范围、风景引导及权限流程修复已通过[最新 macOS CI](https://github.com/riky2026/-./actions/runs/43899558161)：Apple SwiftPM 30/30，原生 JPEG 像素测试和工程结构检查通过，模拟器 Debug、设备 Release 均编译成功。已生成未签名 IPA；模拟器交互、签名安装及 iOS 26 真机相机行为尚未验证。
 
 ## 获取源码
 
@@ -42,7 +42,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 成功后下载 `FrameGuide-UNSIGNED-device-requires-signing` artifact，内有 **FrameGuide-UNSIGNED.ipa（未签名）**；另有 `FrameGuide-native-build-logs`。artifact 的外层 ZIP 只是下载容器。生成 IPA 不能证明已安装、真机相机可用或兼容 iOS 26。
 
-最新产物：[未签名 IPA 下载](https://github.com/riky2026/-./actions/runs/43885558553/artifacts/14234047218) · [构建日志](https://github.com/riky2026/-./actions/runs/43885558553/artifacts/14234461741)。解出的 IPA 为 305844 字节，SHA-256 为 `e890037fff6b727d97252b53064cc1b67c357b0bc7872f40ae726b1b4cfec2f6`。已核对 arm64、iOS 17.0、权限、资源和未签名状态。
+最新产物：[未签名 IPA 下载](https://github.com/riky2026/-./actions/runs/43899558161/artifacts/14240743719) · [构建日志](https://github.com/riky2026/-./actions/runs/43899558161/artifacts/14240687800)。解出的 IPA 为 306629 字节，SHA-256 为 `a110ce87538e795424de9e3c0ae72ddc514882eb1bb52fbdc01c1896b788a925`。已核对 arm64、iOS 17.0、权限、资源和未签名状态。
 
 ## 签名与安装
 
@@ -54,4 +54,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 ## 验证范围
 
-CI 实测源码 ZIP SHA-256 为 `3669eb6322fc84c8f675e2b60d54eb52e3c54c0a031ae32f76a86f96a54fe34b`。该 CI 对应此前版本。当前源码另已修正「实际 JPEG 尺寸小于请求上限」的取景裁剪，新增原生样图回归；此补丁的 Apple 构建及样图执行待验证。历史构建、剩余警告及验收边界见 `docs/validation.md`；实际操作请按 `docs/device-checklist.md` 逐项记录。
+最新 CI 实测源码 ZIP SHA-256 为 `df5625e5ded5c4028ece8880d15ef7271d35dbef5c98b641097cce9ca7c43c23`，包含实际 JPEG 尺寸小于请求上限时的原生像素裁剪回归。本次交付仅在该版本上更新 README 和验证记录，因此源码 ZIP 哈希不同，应用、测试和工作流完全相同。历史构建、剩余警告及验收边界见 `docs/validation.md`；真机操作请按 `docs/device-checklist.md` 记录。
