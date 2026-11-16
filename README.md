@@ -2,7 +2,7 @@
 
 原生 iPhone 相机源码，最低 iOS 17.0，首版拍摄界面固定竖屏。使用 SwiftUI、AVFoundation、Vision、Core Motion、Core Image 和 PhotoKit；无需服务端、API Key、账号或购买授权，不设置拍摄/构图次数上限。画面分析和照片处理都在设备本地进行，只申请相机及相册「仅添加」权限。
 
-这是源码交付。[首次真实 macOS CI](https://github.com/riky2026/-./actions/runs/43866474402) 已通过 Core SwiftPM 27/27 测试和结构检查，但模拟器目标因闪光灯模式类型比较错误编译失败；源码已修正，等待重跑。设备构建与打包未执行，模拟器运行和 iPhone 真机验收尚未完成，不能当作已验证的可安装成品。用户反馈手机运行 iOS 26，具体机型尚未知；兼容性仍需在该设备实测。
+这是原生源码及未签名构建产物交付。[第二次真实 macOS CI](https://github.com/riky2026/-./actions/runs/43868115917) 已通过 Core SwiftPM 27/27 测试、结构检查、模拟器目标编译、设备 Release 编译、未签名 IPA 打包与 artifact 上传。模拟器尚未启动，个人签名、安装和 iPhone 真机验收均未执行。用户反馈手机运行 iOS 26，具体机型尚未知；兼容性仍需在该设备实测。
 
 ## 获取源码
 
@@ -42,6 +42,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 成功后下载 `FrameGuide-UNSIGNED-device-requires-signing` artifact，内有 **FrameGuide-UNSIGNED.ipa（未签名）**；另有 `FrameGuide-native-build-logs`。artifact 的外层 ZIP 只是下载容器。生成 IPA 不能证明已安装、真机相机可用或兼容 iOS 26。
 
+本次产物：[未签名 IPA artifact](https://github.com/riky2026/-./actions/runs/43868115917/artifacts/14226059197)、[构建日志](https://github.com/riky2026/-./actions/runs/43868115917/artifacts/14226204031)。已下载检查 IPA 的 arm64 Mach-O、最低 iOS 17.0、权限与资源配置，确认没有签名或描述文件；该检查只验证归档和配置。CI 仍有启动背景颜色平台声明及未依赖 AppIntents 时跳过元数据提取两类警告，详见 ZIP 内 `docs/validation.md`。
+
 ## 签名与安装
 
 未签名 IPA 不能直接安装到正常 iPhone。需要用你自己的有效 Apple 开发签名重新签名，且设备、Bundle ID、描述文件和账号权益必须匹配。
@@ -52,4 +54,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 ## 验证范围
 
-已取得 Windows 结构静态检查、此前 Swift 6.1/Linux 公共 Compiler Explorer 的 Core 27/27 证据，以及真实 macOS 15.8.2 arm64、Xcode 16.4、Apple Swift 6.1.2 下的 SwiftPM 27/27 和结构检查通过记录。首次模拟器目标编译失败，当前类型修复仍待真实 CI 确认；设备构建、打包、模拟器运行及 iPhone 真机均未执行。详见解压后的 `docs/validation.md`；真实设备验收请逐项执行 `docs/device-checklist.md` 并记录结果。
+已取得 Windows 结构静态检查、此前 Swift 6.1/Linux 公共 Compiler Explorer 的 Core 27/27 证据，以及真实 macOS 15.8.2 arm64、Xcode 16.4、Apple Swift 6.1.2 下的 SwiftPM 27/27、结构检查和模拟器/设备目标构建成功记录。[首次 CI](https://github.com/riky2026/-./actions/runs/43866474402) 曾因闪光灯模式类型比较错误编译失败，修复已由第二次 CI 验证。未签名 IPA 已生成并完成归档/配置检查；模拟器启动、签名安装及 iOS 26 真机运行均未执行。详见解压后的 `docs/validation.md`；真实设备验收请逐项执行 `docs/device-checklist.md` 并记录结果。
