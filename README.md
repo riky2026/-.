@@ -36,7 +36,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 ## macOS / GitHub Actions 构建
 
-工作流 `.github/workflows/ios.yml` 在推送或手动运行时使用 macos-15 和 Xcode 16.4，顺序执行 `swift test --package-path Core`、原生 JPEG 标记样图测试、静态检查、模拟器目标编译、无签名设备编译及打包。任何测试/编译失败都会停止后续设备打包，失败日志仍上传。这里只构建模拟器目标，**不会启动模拟器**。
+工作流 `.github/workflows/ios.yml` 在推送或手动运行时使用 Intel macOS 15 runner（`macos-15-intel`）和 Xcode 16.4，顺序执行 `swift test --package-path Core`、原生 JPEG 标记样图测试、静态检查、模拟器目标编译、无签名设备编译及打包。任何测试/编译失败都会停止后续设备打包，失败日志仍上传。这里只构建模拟器目标，**不会启动模拟器**。
 
 工作流对完整源码仓库直接使用 checkout；对源码包仓库保持 checkout 不变，记录 ZIP 的 SHA-256，安全检查后解压到 runner 临时目录，所有测试、构建和打包均使用同一工程根目录。仓库权限仅 `contents: read`，checkout 不持久化凭据，不上传 Apple 账号或证书，不写回仓库。用户已选择并授权的构建仓库为 [riky2026/-.](https://github.com/riky2026/-.)；远端实际构建结果以 Actions 运行记录为准。
 
