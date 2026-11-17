@@ -2,7 +2,7 @@
 
 原生 iPhone 相机源码，最低 iOS 17.0，首版拍摄界面固定竖屏。使用 SwiftUI、AVFoundation、Vision、Core Motion、Core Image 和 PhotoKit；无需服务端、API Key、账号或购买授权，不设置拍摄/构图次数上限。画面分析和照片处理都在设备本地进行，只申请相机及相册「仅添加」权限。
 
-相机方向、取景范围、风景引导及权限流程修复已通过[最新 macOS CI](https://github.com/riky2026/-./actions/runs/43899558161)：Apple SwiftPM 30/30，原生 JPEG 像素测试和工程结构检查通过，模拟器 Debug、设备 Release 均编译成功。已生成未签名 IPA；模拟器交互、签名安装及 iOS 26 真机相机行为尚未验证。
+构建 2 针对 iPhone 15 / iOS 18.7 上前后镜头均出现“无法确认当前照片的取景范围”、快门无法工作的反馈。现在相机就绪即可拍摄：若不能可靠确定取景边界，拍后标明“本次保留完整画面”，仍可预览、保存和分享。构建 2 的 Apple 编译、像素样图与目标设备复测待执行。
 
 ## 获取源码
 
@@ -17,7 +17,7 @@
 
 首次启动先显示本地拍摄用途，点「继续」才请求相机权限；拒绝后可前往设置或仅重新检查权限。允许相机后进入竖向 3:4 取景器。底部切换自动/人像/风景，轻点主体对焦及选择主体；顶部按钮控制辅助线、闪光灯和设置，底部右侧切换前后镜头。设置内可选智能/居中/左侧三分/右侧三分、构图引导及就绪触感。
 
-引导在容差内稳定至少 0.6 秒才就绪；主体丢失超过 0.8 秒移除旧引导。快门不依赖构图就绪。前置为镜像预览及镜像照片。快门记录取景范围；预览、最近缩略图及导出均在原生照片像素内裁剪，无法确认对应范围时提示重试。风景无显著区域时可点选主体或按水平提示调整；需以真机核对取景范围和像素尺寸，不承诺所有机型相同分辨率。
+引导在容差内稳定至少 0.6 秒才就绪；主体丢失超过 0.8 秒移除旧引导。快门不依赖构图就绪。前置为镜像预览及镜像照片。快门记录取景范围；预览、最近缩略图及导出均在原生照片像素内裁剪，无法确认对应范围时保留原生完整画面。风景无显著区域时可点选主体或按水平提示调整；需以真机核对取景范围和像素尺寸，不承诺所有机型相同分辨率。
 
 拍后选择原片/暖调/清透/黑白，保存到照片或通过系统分享面板分享当前效果。左下角只回看本次会话最近拍摄照片；不会读取整个相册，退出应用不保留会话照片或设置。请先保存需要留存的照片。
 
@@ -42,7 +42,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 成功后下载 `FrameGuide-UNSIGNED-device-requires-signing` artifact，内有 **FrameGuide-UNSIGNED.ipa（未签名）**；另有 `FrameGuide-native-build-logs`。artifact 的外层 ZIP 只是下载容器。生成 IPA 不能证明已安装、真机相机可用或兼容 iOS 26。
 
-最新产物：[未签名 IPA 下载](https://github.com/riky2026/-./actions/runs/43899558161/artifacts/14240743719) · [构建日志](https://github.com/riky2026/-./actions/runs/43899558161/artifacts/14240687800)。解出的 IPA 为 306629 字节，SHA-256 为 `a110ce87538e795424de9e3c0ae72ddc514882eb1bb52fbdc01c1896b788a925`。已核对 arm64、iOS 17.0、权限、资源和未签名状态。
+此前构建 1 的历史产物（不含本次快门修复）：[未签名 IPA 下载](https://github.com/riky2026/-./actions/runs/43899558161/artifacts/14240743719) · [构建日志](https://github.com/riky2026/-./actions/runs/43899558161/artifacts/14240687800)。解出的 IPA 为 306629 字节，SHA-256 为 `a110ce87538e795424de9e3c0ae72ddc514882eb1bb52fbdc01c1896b788a925`。已核对 arm64、iOS 17.0、权限、资源和未签名状态。
 
 ## 签名与安装
 
@@ -54,4 +54,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 ## 验证范围
 
-最新 CI 实测源码 ZIP SHA-256 为 `df5625e5ded5c4028ece8880d15ef7271d35dbef5c98b641097cce9ca7c43c23`，包含实际 JPEG 尺寸小于请求上限时的原生像素裁剪回归。本次交付仅在该版本上更新 README 和验证记录，因此源码 ZIP 哈希不同，应用、测试和工作流完全相同。历史构建、剩余警告及验收边界见 `docs/validation.md`；真机操作请按 `docs/device-checklist.md` 记录。
+此前构建 1 的 CI 实测源码 ZIP SHA-256 为 `df5625e5ded5c4028ece8880d15ef7271d35dbef5c98b641097cce9ca7c43c23`，包含实际 JPEG 尺寸小于请求上限时的原生像素裁剪回归。构建 2 的新验证结果请见验证记录。历史构建、剩余警告及验收边界见 `docs/validation.md`；真机操作请按 `docs/device-checklist.md` 记录。
