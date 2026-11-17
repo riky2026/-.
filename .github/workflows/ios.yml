@@ -93,7 +93,7 @@ jobs:
           swiftc FrameGuide/Photo/PhotoFilter.swift FrameGuide/Photo/PhotoProcessor.swift scripts/PhotoFixture.swift -o "$RUNNER_TEMP/photo-fixture"
           "$RUNNER_TEMP/photo-fixture" 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/photo-fixture.log"
 
-                  - name: Exercise AI composition client snapshots and cancellation (offline fixtures)
+      - name: Exercise AI composition client snapshots and cancellation (offline fixtures)
         working-directory: ${{ env.PROJECT_ROOT }}
         run: |
           set -euo pipefail
