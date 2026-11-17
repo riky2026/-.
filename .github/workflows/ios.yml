@@ -93,6 +93,25 @@ jobs:
           swiftc FrameGuide/Photo/PhotoFilter.swift FrameGuide/Photo/PhotoProcessor.swift scripts/PhotoFixture.swift -o "$RUNNER_TEMP/photo-fixture"
           "$RUNNER_TEMP/photo-fixture" 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/photo-fixture.log"
 
+                  - name: Exercise AI composition client snapshots and cancellation (offline fixtures)
+        working-directory: ${{ env.PROJECT_ROOT }}
+        run: |
+          set -euo pipefail
+          swiftc -parse-as-library -swift-version 5 \
+            Core/Sources/FrameGuideCore/Geometry.swift \
+            Core/Sources/FrameGuideCore/CompositionTypes.swift \
+            FrameGuide/AIComposition/AICompositionTypes.swift \
+            FrameGuide/AIComposition/DeepSeekCompositionClient.swift \
+            FrameGuide/AIComposition/APIKeyStore.swift \
+            FrameGuide/AIComposition/SnapshotJPEGCodec.swift \
+            FrameGuide/AIComposition/PreviewSnapshotProvider.swift \
+            FrameGuide/AIComposition/AICompositionCoordinator.swift \
+            scripts/AICompositionFixture.swift \
+            -framework Foundation -framework CoreImage -framework CoreVideo \
+            -framework ImageIO -framework Combine -framework Security \
+            -o "$RUNNER_TEMP/ai-composition-fixture" 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/ai-composition-compile.log"
+          "$RUNNER_TEMP/ai-composition-fixture" 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/ai-composition-fixture.log"
+
       - name: Validate project structure
         working-directory: ${{ env.PROJECT_ROOT }}
         run: |
