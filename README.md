@@ -2,7 +2,7 @@
 
 原生 iPhone 相机源码，最低 iOS 17.0，首版拍摄界面固定竖屏。使用 SwiftUI、AVFoundation、Vision、Core Motion、Core Image 和 PhotoKit；本地拍摄与构图无需 API Key 或账号，不设置次数上限；可选 DeepSeek AI 构图使用用户自己的 API Key、配额和余额，无项目服务器。实时本地引导与拍后处理在设备进行，只申请相机及相册「仅添加」权限。
 
-本轮新增可选 DeepSeek AI 构图；其原生 fixture、iOS 编译和真实服务调用尚未验证。下列构建 2 结果仅属于拍摄修复的历史版本，不能作为本轮 AI 源码的构建证据。iPhone 15 / iOS 18.7 所有设备项目均尚未真机验证。
+本轮新增可选 DeepSeek AI 构图。CI 运行 `44294336217` 已通过 Core、原生照片和 AI 离线 fixture、工程静态检查、模拟器目标及 iPhoneOS 设备目标编译，并生成未签名 IPA；这不等于真实 DeepSeek API 调用或 iPhone 真机验收。iPhone 15 / iOS 18.7 的前后镜头拍摄、保存和分享仍待实机复测。
 
 构建 2 针对 iPhone 15 / iOS 18.7 上前后镜头均出现“无法确认当前照片的取景范围”、快门无法工作的反馈。现在相机就绪即可拍摄：若不能可靠确定取景边界，拍后标明“本次保留完整画面”，仍可预览、保存和分享。构建 2 已通过 30 项 Core 测试、原生 JPEG 像素样图验证及模拟器和设备目标编译。iPhone 15 两个镜头的实际拍摄、保存和分享仍待复测。
 
@@ -56,11 +56,28 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 以下为历史拍摄修复产物，不包含本轮 AI 功能。本轮未生成经原生 CI 验证的新 IPA。
 
-构建 2 的未签名 IPA 为 314064 字节，SHA-256 为 `397d887ebfe32d4c3ca1d040a35f0f71602be9855f5fa13b0a4dcc2e2362e3fd`。已核对构建号 2、arm64 和最低 iOS 17.0。[下载构建 2](https://github.com/riky2026/-./actions/runs/44065811434/artifacts/14320083542) · [构建日志](https://github.com/riky2026/-./actions/runs/44065811434/artifacts/14320233227)
+最新 DeepSeek 版未签名 IPA 来自提交 `b6b348de6d652b75d7f1fc72666582f249937887`，源码 ZIP SHA-256 为 `b9c01b0b3675a0f51b63e6a6a1da107b99175f3675f135ba48b25bb9f64a6d00`。内部 IPA 为 455253 字节，SHA-256 为 `5d4b021241413adbc3b13fb607621557347a381ed66cf8d5a821d1c8f17a0f87`。[构建 3](https://github.com/riky2026/-./actions/runs/44294336217) · [未签名 IPA artifact](https://github.com/riky2026/-./actions/runs/44294336217/artifacts/14422194063)。旧构建 2 的相机修复证据和历史记录见 `docs/validation.md`。
 
 ## 签名与安装
 
-未签名 IPA 不能直接安装到正常 iPhone。需要用你自己的有效 Apple 开发签名重新签名，且设备、Bundle ID、描述文件和账号权益必须匹配。
+未签名 IPA 不能直接安装到正常 iPhone。仓库工作流提供手动签名选项：PR 合并到默认分支 `main` 后，打开 Actions → **iOS native build (UNSIGNED)** → Run workflow，选择 `main` 并将 `signed_ipa` 设为 `true`。默认保持关闭；普通 push 和 PR 构建不会读取签名密钥。完成后下载 `FrameGuide-SIGNED-device` artifact。
+
+先在 GitHub 仓库 Settings → Environments 创建 `ios-signing` 环境，并把部署分支限制为 `main`。在该环境添加以下加密 secrets：
+
+- `IOS_SIGNING_CERTIFICATE_P12_BASE64`：包含私钥的 `.p12` 证书文件进行 Base64 编码后的内容。
+- `IOS_SIGNING_CERTIFICATE_PASSWORD`：导出 `.p12` 时设置的密码。
+- `IOS_PROVISIONING_PROFILE_BASE64`：匹配本 App 和目标设备的 `.mobileprovision` 文件进行 Base64 编码后的内容。
+
+当前 App 的 Bundle ID 是 `app.frameguide.personal`。描述文件必须使用相同 App ID，并包含已经注册的 iPhone 15 UDID；工作流会检测 Bundle ID、设备列表、有效期和签名证书类型。Apple Development 证书搭配 Development 描述文件，或 Apple Distribution 证书搭配 Ad Hoc 描述文件。Apple 的开发描述文件需要已注册设备和开发证书；Ad Hoc 描述文件也需要 App ID、分发证书及已注册设备，详见 [Apple 开发描述文件说明](https://developer.apple.com/help/account/provisioning-profiles/create-a-development-provisioning-profile/) 和 [Ad Hoc 描述文件说明](https://developer.apple.com/help/account/provisioning-profiles/create-an-ad-hoc-provisioning-profile)。
+
+用 Windows PowerShell 对文件做 Base64 编码时，可运行：
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\签名材料\certificate.p12"))
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\签名材料\FrameGuide.mobileprovision"))
+```
+
+只把编码结果粘贴到 GitHub 的 `ios-signing` 环境 secrets。不要将 `.p12`、密码或描述文件提交到源码、聊天或构建产物。签名工作流只在手动选择默认分支时运行；GitHub 的手动 workflow 需要先存在于默认分支，部署环境 secrets 也可限制可部署分支，详见 [GitHub 手动运行工作流](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow) 和 [GitHub 环境](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments)。
 
 有 Mac 时，解压并用 Xcode 打开 `FrameGuide.xcodeproj`，选择 FrameGuide target → Signing & Capabilities，启用 Automatically manage signing，选择自己的 Team，把 Bundle Identifier 改为自己的唯一标识（例如 `com.yourname.FrameGuide`）。连接并信任 iPhone，在手机开启开发者模式后选择设备运行。账号在你自己的 Xcode 中登录，不向本项目提供密码、证书或私钥。个人免费 Team 的安装有有效期和数量等限制；开发签名与 App Store 分发不同，App Store 还需要相应开发者资格、审核和分发流程。
 
@@ -68,6 +85,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package_source.ps1
 
 ## 验证范围
 
-当前 AI 源码已加入新原生 CI 门禁，但尚未执行；真实 API 调用、模拟器交互、个人签名安装及 iPhone 15 / iOS 18.7 设备清单均待完成。源码包仓库上传时须同步外层 workflow 与 ZIP 内副本；CI 会逐字节核对并记录 workflow SHA-256。
+AI 离线 fixture 和两种 iOS 目标编译已通过 CI。真实 DeepSeek API 调用、模拟器启动交互、个人签名安装及 iPhone 15 / iOS 18.7 设备清单仍待完成。源码包仓库上传时须同步外层 workflow 与 ZIP 内副本；CI 会逐字节核对并记录 workflow SHA-256。
 
 构建 2 的 CI 实测源码 ZIP SHA-256 为 `3c0dff937ca2dd204aab070bf601ae2dd924d1462fee586eb178466bb239a0ad`。本次交付在被测版本上更新了 README 和验证记录，因此交付 ZIP 的哈希不同。构建 1 的历史产物和验证记录见 `docs/validation.md`。真机复测步骤见 `docs/device-checklist.md`。
