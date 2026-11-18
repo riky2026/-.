@@ -41,7 +41,7 @@ jobs:
               root = pathlib.Path(tempfile.mkdtemp(prefix='frameguide-source-', dir=os.environ['RUNNER_TEMP'])).resolve()
               roots = {'Core', 'FrameGuide', 'FrameGuide.xcodeproj', 'docs', 'scripts', '.github', 'README.md', '.gitignore'}
               denied = {'.git', '.superpowers', 'build', 'deriveddata', '.build', '.swiftpm', '__pycache__', 'xcuserdata', 'node_modules', '.cache', '.pytest_cache'}
-              extensions = {'.ipa', '.dylib', '.p12', '.pfx', '.cer', '.pem', '.key', '.mobileprovision', '.provisionprofile', '.pyc', '.xcuserstate', '.xcscmblueprint', '.xccheckout', '.zip'}
+              extensions = {'.ipa', '.dylib', '.p12', '.pfx', '.cer', '.pem', '.key', '.mobileprovision', '.provisionprofile', '.pyc', '.xcuserstate', '.xcscmblueprint', '.xccheckout', '.zip', '.jpg', '.jpeg', '.heic', '.heif', '.dng'}
               with zipfile.ZipFile(bundle) as archive:
                   members = archive.infolist()
                   if len(members) > 10000 or sum(m.file_size for m in members) > 100_000_000:
@@ -68,6 +68,7 @@ jobs:
                       'FrameGuide/AIComposition/AICompositionTypes.swift',
                       'FrameGuide/AIComposition/DeepSeekCompositionClient.swift',
                       'FrameGuide/AIComposition/APIKeyStore.swift',
+                      'FrameGuide/AIComposition/AIUsageConsentStore.swift',
                       'FrameGuide/AIComposition/SnapshotJPEGCodec.swift',
                       'FrameGuide/AIComposition/PreviewSnapshotProvider.swift',
                       'FrameGuide/AIComposition/AICompositionCoordinator.swift',
@@ -75,6 +76,8 @@ jobs:
                       'scripts/PhotoFixture.swift', 'scripts/AICompositionFixture.swift',
                       'FrameGuide/Resources/PrivacyInfo.xcprivacy',
                       'Core/Package.swift', 'Core/Sources/FrameGuideCore/CompositionEngine.swift',
+                      'Core/Sources/FrameGuideCore/CompositionTypes.swift',
+                      'Core/Sources/FrameGuideCore/Geometry.swift',
                       'Core/Tests/FrameGuideCoreTests/CompositionEngineTests.swift',
                       'FrameGuide/App/FrameGuideApp.swift', 'FrameGuide/Resources/Info.plist',
                       'FrameGuide.xcodeproj/project.pbxproj',
@@ -114,16 +117,18 @@ jobs:
           swiftc FrameGuide/Photo/PhotoFilter.swift FrameGuide/Photo/PhotoProcessor.swift scripts/PhotoFixture.swift -o "$RUNNER_TEMP/photo-fixture"
           "$RUNNER_TEMP/photo-fixture" 2>&1 | tee "$GITHUB_WORKSPACE/build/ci-logs/photo-fixture.log"
 
-      - name: Exercise AI composition client snapshots and cancellation (offline fixtures)
+      - name: Exercise automatic AI analysis and live guidance (offline fixture)
         working-directory: ${{ env.PROJECT_ROOT }}
         run: |
           set -euo pipefail
           swiftc -parse-as-library -swift-version 5 \
             Core/Sources/FrameGuideCore/Geometry.swift \
             Core/Sources/FrameGuideCore/CompositionTypes.swift \
+            Core/Sources/FrameGuideCore/CompositionEngine.swift \
             FrameGuide/AIComposition/AICompositionTypes.swift \
             FrameGuide/AIComposition/DeepSeekCompositionClient.swift \
             FrameGuide/AIComposition/APIKeyStore.swift \
+            FrameGuide/AIComposition/AIUsageConsentStore.swift \
             FrameGuide/AIComposition/SnapshotJPEGCodec.swift \
             FrameGuide/AIComposition/PreviewSnapshotProvider.swift \
             FrameGuide/AIComposition/AICompositionCoordinator.swift \
