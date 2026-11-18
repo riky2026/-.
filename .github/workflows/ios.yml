@@ -308,8 +308,14 @@ jobs:
           PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$PROFILE_PLIST")
           cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
           security find-identity -v -p codesigning "$KEYCHAIN_PATH"
-          if ! security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep -Fq "$CODE_SIGN_IDENTITY:"; then
-            echo "Imported certificate does not match profile type ($CODE_SIGN_IDENTITY)." >&2
+          PROFILE_GET_TASK_ALLOW=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:get-task-allow' "$PROFILE_PLIST" 2>/dev/null || true)
+          if [[ "$PROFILE_GET_TASK_ALLOW" == "true" ]]; then
+            EXPECTED_IDENTITY_PREFIX='Apple Development:'
+          else
+            EXPECTED_IDENTITY_PREFIX='Apple Distribution:'
+          fi
+          if ! security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep -Fq "$EXPECTED_IDENTITY_PREFIX"; then
+            echo "Imported certificate does not match profile type ($EXPECTED_IDENTITY_PREFIX)." >&2
             exit 1
           fi
 
